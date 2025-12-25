@@ -331,7 +331,7 @@
                 });
             }
         }
-try {
+        try {
             if (typeof router.getRoutes === 'function') {
                 router.getRoutes().forEach(patchMeta);
             }
@@ -626,7 +626,7 @@ try {
 
             // 查找Vue根实例
             const vueRoot = findVueRoot(document.body);
-            if(vueRoot){
+            if (vueRoot) {
                 console.log('✅ Vue 实例检测成功');
                 // 发送消息给content.js，由content.js转发给background.js
                 window.postMessage({
@@ -688,7 +688,6 @@ try {
             result.allRoutes = listAllRoutes(router);
             console.log('🔍 当前所有路由：');
             console.table(result.allRoutes);
-
 
             restoreConsole(originals);
             return result;
