@@ -124,10 +124,13 @@
                     // 确保数组中的每个元素都有正确的结构
                     result.allRoutes = result.allRoutes.map(route => {
                         if (typeof route === 'object' && route !== null) {
+                            // 修改bug点
+                            // console.log("bug点: path和name的属性不为字符串类型时，反序列化会报错。报错函数为：sanitizeForPostMessage");
+                            // console.log(route);
                             return {
-                                name: route.name || '',
-                                path: route.path || '',
-                                meta: route.meta || {}
+                                name: typeof route?.name === 'string' ? route.name : '',
+                                path: typeof route?.path === 'string' ? route.path : '',
+                                meta: route?.meta || {}
                             };
                         }
                         return { name: '', path: route || '', meta: {} };
@@ -685,6 +688,7 @@ try {
             result.allRoutes = listAllRoutes(router);
             console.log('🔍 当前所有路由：');
             console.table(result.allRoutes);
+
 
             restoreConsole(originals);
             return result;
