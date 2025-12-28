@@ -110,7 +110,8 @@ function initDetection() {
                 setTimeout(injectDetector, 100);
             });
         } else {
-            setTimeout(injectDetector, 100);
+            // 延迟1秒注入，确保DOM完全加载
+            setTimeout(injectDetector, 1000);
         }
     } catch (e) {
         console.error("Init detection error:", e);
