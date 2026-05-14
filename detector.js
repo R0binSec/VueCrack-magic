@@ -2,6 +2,7 @@
     // ======== 通用工具函数 ========
 
     // 广度优先查找 Vue 根实例（Vue2/3）
+    // my add code
     function findVueRoot(root, maxDepth = 1000) {
         const queue = [{ node: root, depth: 0 }];
         while (queue.length) {
@@ -41,6 +42,25 @@
         }
         return null;
     }
+
+    // function findVueRoot(root, maxDepth = 1000) {
+    //     const queue = [{ node: root, depth: 0 }];
+    //     while (queue.length) {
+    //         const { node, depth } = queue.shift();
+    //         if (depth > maxDepth) break;
+
+    //         if (node.__vue_app__ || node.__vue__ || node._vnode) {
+    //             return node;
+    //         }
+
+    //         if (node.nodeType === 1 && node.childNodes) {
+    //             for (let i = 0; i < node.childNodes.length; i++) {
+    //                 queue.push({ node: node.childNodes[i], depth: depth + 1 });
+    //             }
+    //         }
+    //     }
+    //     return null;
+    // }
 
     // 统一错误处理
     function handleError(error, context, shouldStop = false) {
@@ -124,13 +144,10 @@
                     // 确保数组中的每个元素都有正确的结构
                     result.allRoutes = result.allRoutes.map(route => {
                         if (typeof route === 'object' && route !== null) {
-                            // 修改bug点
-                            // console.log("bug点: path和name的属性不为字符串类型时，反序列化会报错。报错函数为：sanitizeForPostMessage");
-                            // console.log(route);
                             return {
-                                name: typeof route?.name === 'string' ? route.name : '',
-                                path: typeof route?.path === 'string' ? route.path : '',
-                                meta: route?.meta || {}
+                                name: route.name || '',
+                                path: route.path || '',
+                                meta: route.meta || {}
                             };
                         }
                         return { name: '', path: route || '', meta: {} };
@@ -331,6 +348,7 @@
                 });
             }
         }
+
         try {
             if (typeof router.getRoutes === 'function') {
                 router.getRoutes().forEach(patchMeta);
@@ -626,6 +644,7 @@
 
             // 查找Vue根实例
             const vueRoot = findVueRoot(document.body);
+            // add code
             if (vueRoot) {
                 console.log('✅ Vue 实例检测成功');
                 // 发送消息给content.js，由content.js转发给background.js
@@ -635,15 +654,11 @@
                     color: '#42b883'
                 }, '*');
             }
-            // if (vueRoot) {
-            //     window.postMessage({
-            //         type: 'updateTest',
-            //         result: result
-            //     }, '*');
-            // }
 
             if (!vueRoot) {
                 console.error('❌ 未检测到 Vue 实例');
+                restoreConsole(originals);
+                // add code 
                 // 发送清除徽章的消息
                 window.postMessage({
                     type: 'VUE_BADGE_COLOR_REQUEST',
