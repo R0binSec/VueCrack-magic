@@ -774,7 +774,7 @@
         };
     }
 
-    // 防抖的重新检测
+    // 防抖的重新检测（只在成功时更新徽章，失败时不清除）
     let reDetectionTimer = null;
     function scheduleReDetection() {
         if (reDetectionTimer) {
@@ -790,12 +790,18 @@
                     color: '#42b883'
                 }, '*');
 
-                // 执行完整分析
+                // 执行简化分析（只更新路由信息，失败时不清除徽章）
                 setTimeout(() => {
-                    const analysisResult = performFullAnalysis();
-                    sendRouterResult(analysisResult);
+                    try {
+                        const analysisResult = performFullAnalysis();
+                        sendRouterResult(analysisResult);
+                    } catch (e) {
+                        // 分析失败不影响徽章显示
+                        console.warn('Route re-analysis failed:', e);
+                    }
                 }, 100);
             }
+            // 如果没有找到Vue实例，不执行任何操作，保持原有徽章状态
         }, 300);
     }
 
