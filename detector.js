@@ -746,65 +746,6 @@
             }
         }, delay);
     }
-
-    // add bug2 - 监听路由变化（Vue Router 会修改 window.history）
-    function setupRouteChangeListener() {
-        // 监听 popstate 事件（浏览器前进后退）
-        window.addEventListener('popstate', function () {
-            scheduleReDetection();
-        });
-
-        // 监听 hashchange 事件（hash 模式路由）
-        window.addEventListener('hashchange', function () {
-            scheduleReDetection();
-        });
-
-        // 监听 pushState/replaceState 调用（history 模式路由）
-        const originalPushState = history.pushState;
-        const originalReplaceState = history.replaceState;
-
-        history.pushState = function (...args) {
-            originalPushState.apply(this, args);
-            scheduleReDetection();
-        };
-
-        history.replaceState = function (...args) {
-            originalReplaceState.apply(this, args);
-            scheduleReDetection();
-        };
-    }
-
-    // 防抖的重新检测（只在成功时更新徽章，失败时不清除）
-    let reDetectionTimer = null;
-    function scheduleReDetection() {
-        if (reDetectionTimer) {
-            clearTimeout(reDetectionTimer);
-        }
-        reDetectionTimer = setTimeout(() => {
-            const vueRoot = simpleVueDetection();
-            if (vueRoot) {
-                // 更新徽章颜色
-                window.postMessage({
-                    type: 'VUE_BADGE_COLOR_REQUEST',
-                    action: 'setBadgeBackgroundColor',
-                    color: '#42b883'
-                }, '*');
-
-                // 执行简化分析（只更新路由信息，失败时不清除徽章）
-                setTimeout(() => {
-                    try {
-                        const analysisResult = performFullAnalysis();
-                        sendRouterResult(analysisResult);
-                    } catch (e) {
-                        // 分析失败不影响徽章显示
-                        console.warn('Route re-analysis failed:', e);
-                    }
-                }, 100);
-            }
-            // 如果没有找到Vue实例，不执行任何操作，保持原有徽章状态
-        }, 300);
-    }
-
     // ======== 主执行逻辑 ========
     try {
         const vueRoot = simpleVueDetection();
@@ -822,9 +763,6 @@
         } else {
             delayedDetection(0, 0); // 添加初始重试计数
         }
-
-        // 设置路由变化监听
-        setupRouteChangeListener();
     } catch (error) {
         handleError(error, 'Main execution', false);
         delayedDetection(500, 0); // 添加初始重试计数

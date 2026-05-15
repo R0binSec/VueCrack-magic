@@ -159,12 +159,32 @@ chrome.tabs.onRemoved.addListener((tabId) => {
     tabStates.delete(tabId);
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-    // 标签页导航或刷新时清除状态
-    if (changeInfo.status === 'loading') {
-        tabStates.delete(tabId);
-        // 清除该标签页的徽章
-        chrome.action.setBadgeText({ tabId, text: '' });
+// 修复 徽章清除问题 bug
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // 只有检测到真正的页面刷新或URL变更时才清除徽章
+    // 避免在Vue单页应用的路由跳转时错误清除
+    if (changeInfo.status === 'loading' && changeInfo.url) {
+        // 检查是否是域名变化（真正的页面导航）
+        const oldState = tabStates.get(tabId);
+        if (oldState && oldState.lastUrl) {
+            try {
+                const oldHost = new URL(oldState.lastUrl).hostname;
+                const newHost = new URL(changeInfo.url).hostname;
+                if (oldHost !== newHost) {
+                    // 域名变化，真正的页面跳转
+                    tabStates.delete(tabId);
+                    chrome.action.setBadgeText({ tabId, text: '' });
+                    return;
+                }
+            } catch (e) {
+                // URL解析失败，按普通情况处理
+            }
+        }
+        // 更新最后访问的URL
+        if (oldState) {
+            oldState.lastUrl = changeInfo.url;
+            tabStates.set(tabId, oldState);
+        }
     }
 });
 
@@ -178,7 +198,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // 更新标签页状态
         tabStates.set(tabId, {
             vueDetected: true,
-            color: request.color || '#42b883'
+            color: request.color || '#42b883',
+            lastUrl: sender.tab?.url || request.url || ''
         });
 
         // 只为当前标签页设置徽章
